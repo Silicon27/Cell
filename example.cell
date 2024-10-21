@@ -1,0 +1,6 @@
+((import "example.cell")
+
+(defn main []
+  (print "Hello, world!"))
+
+(call main))
