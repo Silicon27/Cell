@@ -13,13 +13,15 @@ class Parser:
 
 
 # Combines two parsers
-def seq(parser1, parser2):
+def seq(*parsers):
     def parse_seq(s, idx):
-        x, idx2 = parser1(s, idx)
-        y, idx3 = parser2(s, idx2)
-        if x is None or y is None:
-            return (None, idx)
-        return ((x, y), idx3)
+        result = []
+        for parser in parsers:
+            x, idx = parser(s, idx)
+            if x is None:
+                return None, idx
+            result.append(x)
+        return result, idx
 
     return Parser(parse_seq)
 
@@ -118,6 +120,9 @@ def many(parser):
             idx = idx2
         return result, idx
     return Parser(inner)
+
+
+
 
 # parse_letter_a = Parser(parse_a)
 # parse_true = Parser(parse_true)

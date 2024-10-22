@@ -138,3 +138,6 @@ def bitwise_not_parser(text, pos):
         return ("NOT", pos + 1)
     return (None, pos)
 
+def string_parser(text, pos):
+    return (text[pos], pos + 1)
+
