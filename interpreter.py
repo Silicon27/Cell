@@ -1,60 +1,72 @@
+# interpreter.py
+
 from re import Match
 from tokenizer import ConvertToToken
 from brace import matchbrace
 from helper import scope
-from syntax import parsec, parsers
 import json
 import os
 
+class Interpreter:
+    def __init__(self, config_path):
+        self.variables = {}
+        self.functions = {}
+        self.funcData = {}
+        self.keywords = ["defn", "import", "int", "str", "bool", "float", "double", "char", "vcel", "root", "var"]
+        self.tokens = ["DEFN", "IMPORT", "INT", "STR", "BOOL", "FLOAT", "DOUBLE", "CHAR", "VCEL", "ROOT", "VAR"]
+        self.SYMBOL = ["=", "+", "-", "*", "/", "%", "(", ")", "{", "}", "[", "]",
+                       ";", ":", ",", "==", "!=", "<", ">", "<=", ">=", "&&", "||",
+                       "!", "&", "|", "...", "->", "=>", "++", "--", "+=", "-=",
+                       "*=", "/=", "%=", "'", '"']
+        self.config_path = config_path
+        self.tokenized_output = []
+        self.tokenized_dict = {}
+        self.tokenized_output_w_spaces = []
+        self.MatchedBrace = {}
+        self.scope_list = []
+        self.scope_list_w_space = []
+        self.root_list = []
 
-#____________________________ Important Variables ____________________________#
-variables = {}
-functions = {}
-funcData = {}
-#_____________________________________________________________________________#
+    def load_config(self):
+        with open(os.path.abspath(self.config_path), "r") as file:
+            config = json.load(file)
+        return config["FileConfig"]["target"]
 
+    def tokenize(self, target_file):
+        tokenizer = ConvertToToken(self.keywords, target_file, self.tokens, self.SYMBOL)
+        self.tokenized_output, self.tokenized_dict, self.tokenized_output_w_spaces = tokenizer.tokenize()
 
-# Although the tokens are just capitalized keywords, they are used to identify the type of token.
-# If by chance there is a word that contains a keyword although not one,
-# the capitalized keyword will be used to identify the "true" keyword
-keywords = ["defn", "import", "int", "str", "bool", "float", "double", "char", "vcel", "root", "var"]
-tokens = ["DEFN", "IMPORT", "INT", "STR", "BOOL", "FLOAT", "DOUBLE", "CHAR", "VCEL", "ROOT", "VAR"]
+    def match_braces(self):
+        self.MatchedBrace = matchbrace.match_braces(self.tokenized_output)
 
-SYMBOL = ["=", "+", "-", "*", "/", "%", "(", ")", "{", "}", "[", "]",
-          ";", ":", ",", "==", "!=", "<", ">", "<=", ">=", "&&", "||",
-          "!", "&", "|", "...", "->", "=>", "++", "--", "+=", "-=",
-          "*=", "/=", "%=",]
+    def analyze_scope(self):
+        self.scope_list, self.root_list, self.scope_list_w_space = scope.analyzer(self.tokenized_output, self.MatchedBrace, self.tokenized_output_w_spaces)
 
-(tokenized_output,
- tokenized_dict,
- tokenized_output_w_spaces) = ConvertToToken(keywords,
-                                             json.load(open(os.path.abspath("cellconfig/config.json"), "r"))["FileConfig"]["target"],
-                                             tokens,
-                                             SYMBOL).tokenize()
-# print(tokenized_output)
-MatchedBrace = matchbrace.match_braces(tokenized_output)
-
-scope_list, root_list = scope.analyzer(tokenized_output, MatchedBrace)
-
-# print(MatchedBrace)
-
-_embedded_function_call_syntax = parsec.seq(parsers.str_parser, parsers.opening_square_bracket_parser, parsers.closing_square_bracket_parser)
-
-#______________________________ Parsers ______________________________#
-
-def argument_parser(text, pos):
-    if pos < len(text):
-        for i in text[pos:]:
-            if i == ",":
-                pass
-            elif i == "{":
-                _embedded_function_call_syntax(text, pos)
-            elif i == "]":
-                return text, pos
-            else:
-                pass
-
-#______________________________ Parser Functions ______________________________#
-_defn_syntax = parsec.seq(parsers.defn_parser, parsers.str_parser, parsers.opening_square_bracket_parser, parsers.)
+    def visualize_scope(self):
+        scope.visualizer(self.scope_list)
 
 
+    #________________________________ Handler functions ___________________________________#
+
+    def _defn_handler(self, scope):
+        pass
+
+    #______________________________________________________________________________________#
+
+    def run(self):
+        target_file = self.load_config()
+        self.tokenize(target_file)
+        self.match_braces()
+        self.analyze_scope()
+        self.visualize_scope()
+        # Add more steps to run the interpreter as needed
+
+# Example usage
+if __name__ == "__main__":
+    interpreter = Interpreter("cellconfig/config.json")
+    interpreter.run()
+    # print(interpreter.tokenized_output_w_spaces)
+    # print(interpreter.scope_list)
+    # print(interpreter.scope_list_w_space)
+    # print(interpreter.root_list)
+    # print(interpreter.tokenized_output_w_spaces)

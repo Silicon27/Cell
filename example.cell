@@ -1,7 +1,7 @@
 ((import "example.cell")
 
 (root defn main []
-  (print ["Hello, world!"]))
+  (print ["Hello, world!  The answer is "]))
 (root var myvar:int = 123)
 
 (call main))
